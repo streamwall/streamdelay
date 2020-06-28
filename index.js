@@ -276,6 +276,7 @@ function initAPIServer(argv, pipelineService) {
   app.silent = true
 
   app.use(bodyParser())
+  app.use(websocket())
 
   function formatStatus(state) {
     return {
@@ -284,8 +285,6 @@ function initAPIServer(argv, pipelineService) {
       state: state.value,
     }
   }
-
-  app.use(websocket())
 
   function handlePatchState(patchState) {
     if (patchState.isCensored !== undefined) {
