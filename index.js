@@ -276,7 +276,7 @@ function initAPIServer(argv, pipelineService) {
   function formatStatus(state) {
     return {
       delaySeconds: argv.delaySeconds,
-      censored: state.matches('censorship.censored'),
+      isCensored: state.matches('censorship.censored'),
       state: state.value,
     }
   }
@@ -284,8 +284,8 @@ function initAPIServer(argv, pipelineService) {
   app.use(websocket())
 
   function handlePatchState(patchState) {
-    if (patchState.censored !== undefined) {
-      pipelineService.send(patchState.censored ? 'CENSOR' : 'UNCENSOR')
+    if (patchState.isCensored !== undefined) {
+      pipelineService.send(patchState.isCensored ? 'CENSOR' : 'UNCENSOR')
     }
   }
 

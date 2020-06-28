@@ -52,7 +52,7 @@ returns:
 
 ```
 {
-  censored: bool,
+  isCensored: bool,
   state: {... full state object ...}
 }
 ```
@@ -77,7 +77,7 @@ Set the stream status to censored (redacted) or not. When transitioning from cen
 ```
 PATCH /status
 Content-Type: application/json
-{censored: false} or {censored: true}
+{isCensored: false} or {isCensored: true}
 ```
 
 returns: same as `/status`
