@@ -54,7 +54,10 @@ const pipelineMachine = Machine(
               settings: (context, event) => event.settings,
             }),
           },
-          FINISHED: '.running',
+          FINISHED: {
+            target: '.running',
+            internal: false,
+          },
         },
         states: {
           init: {},
