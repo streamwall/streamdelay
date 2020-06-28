@@ -142,9 +142,9 @@ const pipelineMachine = Machine(
 
         let outStream
         if (outUri.startsWith('rtmp://')) {
-          outStream = `flvmux name=mux streamable=true ! rtmpsink name=sink location="${outUri} live=1"`
+          outStream = `flvmux name=mux streamable=true ! queue ! rtmpsink name=sink location="${outUri} live=1"`
         } else if (outUri.startsWith('srt://')) {
-          outStream = `mpegtsmux name=mux ! srtsink name=sink uri=${outUri}`
+          outStream = `mpegtsmux name=mux ! queue ! srtsink name=sink uri=${outUri}`
         } else {
           throw new Error(`Unexpected output stream protocol: ${outUri}`)
         }
