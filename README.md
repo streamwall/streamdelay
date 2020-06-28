@@ -42,10 +42,10 @@ Requests must either contain:
 
 All responses are `Content-Type: application/json`.
 
-### Get current state
+### Get current status
 
 ```
-GET /state
+GET /status
 ```
 
 returns:
@@ -53,29 +53,29 @@ returns:
 ```
 {
   censored: bool,
-  status: {... full state object ...}
+  state: {... full state object ...}
 }
 ```
 
-The `status` object can be matched using [`xstate`'s `State.from` constructor](https://xstate.js.org/api/classes/state.html#from):
+The `state` object can be matched using [`xstate`'s `State.from` constructor](https://xstate.js.org/api/classes/state.html#from):
 
 ```js
 // Check if the stream is waiting for a connection
-State.from(status).matches('stream.running.waiting')
+State.from(state).matches('stream.running.waiting')
 
 // Check if the stream is connected and rolling
-State.from(status).matches('stream.running.started')
+State.from(state).matches('stream.running.started')
 
 // Check if we're in the process of deactivating the censorship mode
-State.from(status).matches('censorship.censored.deactivating')
+State.from(state).matches('censorship.censored.deactivating')
 ```
 
-### Set state
+### Set status
 
-Set the stream state to censored (redacted) or not. When transitioning from censored to uncensored state, Streamdelay will wait the configured `delaySeconds` before turning off the censored state. This helps prevent early release of the censored mode before the delayed content has been broadcast.
+Set the stream status to censored (redacted) or not. When transitioning from censored to uncensored status, Streamdelay will wait the configured `delaySeconds` before turning off the censored status. This helps prevent early release of the censored mode before the delayed content has been broadcast.
 
 ```
-PATCH /state
+PATCH /status
 Content-Type: application/json
 {censored: false} or {censored: true}
 ```
@@ -89,6 +89,6 @@ GET /ws?key=API_KEY
 Upgrade: websocket
 ```
 
-Upon initial connection, the current state will be sent in JSON format. It will be sent again whenever the state changes.
+Upon initial connection, the current status will be sent in JSON format. It will be sent again whenever the status or state changes.
 
-Sending a JSON message has the same behavior as `PATCH /state`.
+Sending a JSON message has the same behavior as `PATCH /status`.

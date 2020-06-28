@@ -273,11 +273,11 @@ function initAPIServer(argv, pipelineService) {
 
   app.use(bodyParser())
 
-  function formatState(state) {
+  function formatStatus(state) {
     return {
       delaySeconds: argv.delaySeconds,
       censored: state.matches('censorship.censored'),
-      status: state.value,
+      state: state.value,
     }
   }
 
@@ -347,8 +347,8 @@ function initAPIServer(argv, pipelineService) {
 
       ws.send(
         JSON.stringify({
-          type: 'state',
-          state: formatState(pipelineService.state),
+          type: 'status',
+          status: formatStatus(pipelineService.state),
         }),
       )
     }),
@@ -361,24 +361,24 @@ function initAPIServer(argv, pipelineService) {
     for (const ws of sockets) {
       ws.send(
         JSON.stringify({
-          type: 'state',
-          state: formatState(state),
+          type: 'status',
+          status: formatStatus(state),
         }),
       )
     }
   })
 
   app.use(
-    route.get(`/state`, async (ctx) => {
-      ctx.body = formatState(pipelineService.state)
+    route.get(`/status`, async (ctx) => {
+      ctx.body = formatStatus(pipelineService.state)
     }),
   )
 
   app.use(
-    route.patch(`/state`, async (ctx) => {
+    route.patch(`/status`, async (ctx) => {
       const { request } = ctx
       handlePatchState(request.body)
-      ctx.body = formatState(pipelineService.state)
+      ctx.body = formatStatus(pipelineService.state)
     }),
   )
 
