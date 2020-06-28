@@ -263,13 +263,6 @@ function initPipeline(argv) {
   return pipelineService
 }
 
-function formatState(state) {
-  return {
-    censored: state.matches('censorship.censored'),
-    status: state.value,
-  }
-}
-
 function initAPIServer(argv, pipelineService) {
   const sockets = new Set()
 
@@ -279,6 +272,15 @@ function initAPIServer(argv, pipelineService) {
   app.silent = true
 
   app.use(bodyParser())
+
+  function formatState(state) {
+    return {
+      delaySeconds: argv.delaySeconds,
+      censored: state.matches('censorship.censored'),
+      status: state.value,
+    }
+  }
+
   app.use(websocket())
 
   function handlePatchState(patchState) {
