@@ -82,7 +82,7 @@ Content-Type: application/json
 
 returns: same as `/status`
 
-## Websocket API
+## WebSocket API
 
 ```
 GET /ws?key=API_KEY
