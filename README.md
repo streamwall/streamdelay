@@ -76,11 +76,9 @@ Set the stream state to censored (redacted) or not. When transitioning from cens
 
 ```
 PATCH /state
+Content-Type: application/json
+{censored: false} or {censored: true}
 ```
-
-body:
-
-`{censored: false}` or `{censored: true}`
 
 returns: same as `/status`
 
