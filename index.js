@@ -151,16 +151,16 @@ const pipelineMachine = Machine(
 
         const pipeline = new gstreamer.Pipeline(`
           srtsrc name=src uri=${srtInUri} ! ${delayQueue} ! tsdemux name=demux
-          demux. ! queue ! video/x-h264 ! h264parse ! video/x-h264 ! avdec_h264 ! output-selector name=vsel
-          vsel. ! queue ! vf.
-          vsel. ! queue
+          demux. ! queue ! video/x-h264 ! h264parse ! video/x-h264 ! avdec_h264 ! output-selector name=osel
+          osel. ! queue ! isel.
+          osel. ! queue
             ! videoscale
             ! video/x-raw,width=${pixelizedWidth},height=${pixelizedHeight}
             ! videoscale method=nearest-neighbour ! video/x-raw,width=${width},height=${height}
             ! gdkpixbufoverlay location=${gstEscape(overlayImg)}
-            ! videoconvert
-            ! vf.
-          funnel name=vf ! x264enc bitrate=${x264Bitrate} tune=zerolatency speed-preset=${x264Preset} byte-stream=true threads=0 key-int-max=60 ! queue ! mux.
+            ! queue
+            ! isel.
+          input-selector name=isel ! queue ! x264enc bitrate=${x264Bitrate} tune=zerolatency speed-preset=${x264Preset} byte-stream=true threads=0 key-int-max=60 ! queue ! mux.
           demux. ! queue ! aacparse ! decodebin ! audioconvert ! volume name=vol volume=0 ! audioconvert ! voaacenc bitrate=96000 ! aacparse ! queue ! mux.
           ${outStream}
         `)
@@ -178,10 +178,12 @@ const pipelineMachine = Machine(
 
         onReceive((ev) => {
           if (ev.type === 'NORMAL') {
-            pipeline.setPad('vsel', 'active-pad', 'src_0')
+            pipeline.setPad('osel', 'active-pad', 'src_0')
+            pipeline.setPad('isel', 'active-pad', 'sink_0')
             pipeline.findChild('vol').volume = 1
           } else if (ev.type === 'CENSOR') {
-            pipeline.setPad('vsel', 'active-pad', 'src_1')
+            pipeline.setPad('osel', 'active-pad', 'src_1')
+            pipeline.setPad('isel', 'active-pad', 'sink_1')
             pipeline.findChild('vol').volume = 0
           } else {
             console.warn('unexpected event:', ev)
