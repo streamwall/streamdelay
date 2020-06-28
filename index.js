@@ -129,6 +129,7 @@ const pipelineMachine = Machine(
           x264Preset,
           pixelizeScale,
           overlayImg,
+          debug,
         } = context.settings
 
         const pixelizedWidth = Math.floor(width / pixelizeScale)
@@ -136,7 +137,7 @@ const pipelineMachine = Machine(
         const delayNs = delaySeconds * 1e9
 
         const delayQueue = `
-          queue name=queue
+          queue name=delayqueue
             min-threshold-time=${delayNs}
             max-size-time=${delayNs + 5 * 1e9}
             max-size-buffers=0
@@ -145,9 +146,9 @@ const pipelineMachine = Machine(
 
         let outStream
         if (outUri.startsWith('rtmp://')) {
-          outStream = `flvmux name=mux streamable=true ! queue ! rtmpsink name=sink location="${outUri} live=1"`
+          outStream = `flvmux name=mux streamable=true ! queue name=outqueue ! rtmpsink name=sink location="${outUri} live=1"`
         } else if (outUri.startsWith('srt://')) {
-          outStream = `mpegtsmux name=mux ! queue ! srtsink name=sink uri=${outUri}`
+          outStream = `mpegtsmux name=mux ! queue name=outqueue ! srtsink name=sink uri=${outUri}`
         } else {
           throw new Error(`Unexpected output stream protocol: ${outUri}`)
         }
@@ -169,6 +170,9 @@ const pipelineMachine = Machine(
         `)
 
         pipeline.pollBus((msg) => {
+          if (debug) {
+            console.log(msg)
+          }
           if (msg.type === 'eos') {
             pipeline.stop()
             callback('FINISHED')
@@ -193,8 +197,25 @@ const pipelineMachine = Machine(
           }
         })
 
+        let debugInterval
+        if (debug) {
+          function printQueue(name) {
+            const q = pipeline.findChild(name)
+            console.log(
+              name,
+              `time: ${q['current-level-time']} | bytes: ${q['current-level-bytes']} | max-time: ${q['max-size-time']}`,
+            )
+          }
+          debugInterval = setInterval(() => {
+            printQueue('delayqueue')
+            printQueue('outqueue')
+            console.log('---')
+          }, 1000)
+        }
+
         return () => {
           pipeline.stop()
+          clearInterval(debugInterval)
         }
       },
     },
@@ -255,6 +276,10 @@ function parseArgs() {
       describe: 'Path to overlay image (should have same dimensions as stream)',
       normalize: true,
       required: true,
+    })
+    .option('debug', {
+      describe: 'Print GStreamer debugging status information',
+      boolean: true,
     })
   return parser.argv
 }
