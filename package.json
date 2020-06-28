@@ -1,6 +1,6 @@
 {
   "name": "streamdelay",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "A delay + dump button for live streams, allowing screening and redaction of explicit content.",
   "main": "index.js",
   "dependencies": {
