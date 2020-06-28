@@ -154,7 +154,7 @@ const pipelineMachine = Machine(
         }
 
         const pipeline = new gstreamer.Pipeline(`
-          srtsrc name=src uri=${srtInUri} ! ${delayQueue} ! tsdemux name=demux
+          srtsrc name=src uri=${srtInUri} ! tsparse ! ${delayQueue} ! tsdemux name=demux
           demux. ! queue ! video/x-h264 ! h264parse ! video/x-h264 ! avdec_h264 ! output-selector name=osel
           osel. ! queue ! isel.
           osel. ! queue
