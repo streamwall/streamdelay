@@ -189,6 +189,10 @@ const pipelineMachine = Machine(
             console.warn('unexpected event:', ev)
           }
         })
+
+        return () => {
+          pipeline.stop()
+        }
       },
     },
   },
