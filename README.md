@@ -2,7 +2,7 @@
 
 ![A pixelated stream filtered using streamdelay](screenshot.png)
 
-Streamdelay enables streams to have ["broadcast delay"](https://en.wikipedia.org/wiki/Broadcast_delay) for content redaction/filtering. Stream upload is delayed by a customizable duration, allowing a pixelization and audio blocking filter to be applied ahead of unacceptable content being broadcast.
+Streamdelay enables streams to have ["broadcast delay"](https://en.wikipedia.org/wiki/Broadcast_delay) for content redaction/filtering. Stream upload is delayed by a customizable duration, allowing a pixelization and audio blocking filter to be applied ahead of sensitive content being broadcast.
 
 Streamdelay accepts an input stream using the [SRT protocol](https://www.haivision.com/products/srt-secure-reliable-transport/) (supported by OBS and ffmpeg), and can output to either an SRT or RTMP endpoint (such as twitch.tv or restream.io).
 
