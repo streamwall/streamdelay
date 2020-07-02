@@ -7,7 +7,7 @@
   "delaySeconds": 15,
   "width": 1920,
   "height": 1080,
-  "x264Bitrate": 4000,
+  "x264Bitrate": 4500,
   "x264Preset": "slow",
   "pixelizeScale": 20,
   "overlayImg": "change-me.png"
