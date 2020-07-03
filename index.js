@@ -55,12 +55,16 @@ const pipelineMachine = Machine(
             }),
           },
           FINISHED: {
-            target: '.running',
-            internal: false,
+            target: '.restarting',
           },
         },
         states: {
           init: {},
+          restarting: {
+            after: {
+              RESTART_DELAY: 'running',
+            },
+          },
           running: {
             initial: 'waiting',
             invoke: {
@@ -111,6 +115,8 @@ const pipelineMachine = Machine(
     delays: {
       STREAM_DELAY: (context, event) =>
         context.settings ? 1000 * context.settings.delaySeconds : 0,
+      RESTART_DELAY: (context, event) =>
+        context.settings ? 1000 * context.settings.restartSeconds : 5000,
     },
     actions: {
       logError: (context, event) => {
@@ -254,6 +260,11 @@ function parseArgs() {
       describe: 'Number of seconds to delay stream',
       default: 15,
     })
+    .option('restart-seconds', {
+      describe:
+        'Number of seconds to wait before restarting pipeline (on error)',
+      default: 3,
+    })
     .option('width', {
       describe: 'Width of stream',
       default: 1920,
@@ -311,6 +322,7 @@ function initAPIServer(argv, pipelineService) {
   function formatStatus(state) {
     return {
       delaySeconds: argv.delaySeconds,
+      restartSeconds: argv.restartSeconds,
       isCensored: state.matches('censorship.censored'),
       state: state.value,
     }
