@@ -170,7 +170,9 @@ const pipelineMachine = Machine(
         `)
 
         pipeline.pollBus((msg) => {
-          if (debug) {
+          if (msg.type === 'error') {
+            console.error(msg)
+          } else if (debug) {
             console.log(msg)
           }
           if (msg.type === 'eos') {
