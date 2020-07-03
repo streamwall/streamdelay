@@ -146,7 +146,7 @@ const pipelineMachine = Machine(
 
         let outStream
         if (outUri.startsWith('rtmp://')) {
-          outStream = `flvmux name=mux streamable=true ! queue name=outqueue ! rtmpsink name=sink location="${outUri} live=1"`
+          outStream = `flvmux name=mux streamable=true ! queue name=outqueue ! rtmpsink name=sink enable-last-sample=false location="${outUri} live=1"`
         } else if (outUri.startsWith('srt://')) {
           outStream = `mpegtsmux name=mux ! queue name=outqueue ! srtsink name=sink uri=${outUri}`
         } else {
