@@ -175,7 +175,7 @@ const pipelineMachine = Machine(
           } else if (debug) {
             console.log(msg)
           }
-          if (msg.type === 'eos') {
+          if (msg.type === 'eos' || msg.type === 'error') {
             pipeline.stop()
             callback('FINISHED')
           } else if (msg.type === 'stream-start') {
