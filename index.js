@@ -152,11 +152,26 @@ const pipelineMachine = Machine(
             max-size-bytes=0
         `
 
+        const bufferQueue = `
+          queue
+            max-size-time=${delayNs}
+            max-size-buffers=0
+            max-size-bytes=0
+        `
+
+        const dropQueue = `
+          queue
+            leaky=downstream
+            max-size-time=${1 * SEC}
+            max-size-buffers=0
+            max-size-bytes=0
+        `
+
         let outStream
         if (outUri.startsWith('rtmp://')) {
-          outStream = `flvmux name=mux streamable=true ! queue name=outqueue leaky=downstream ! rtmpsink name=sink enable-last-sample=false location="${outUri} live=1"`
+          outStream = `flvmux name=mux streamable=true ! queue ! rtmpsink name=sink enable-last-sample=false location="${outUri} live=1"`
         } else if (outUri.startsWith('srt://')) {
-          outStream = `mpegtsmux name=mux ! queue name=outqueue leaky=downstream ! srtsink name=sink uri=${outUri}`
+          outStream = `mpegtsmux name=mux ! queue ! srtsink name=sink uri=${outUri}`
         } else {
           throw new Error(`Unexpected output stream protocol: ${outUri}`)
         }
@@ -172,8 +187,8 @@ const pipelineMachine = Machine(
             ! gdkpixbufoverlay location=${gstEscape(overlayImg)}
             ! queue
             ! isel.
-          input-selector name=isel ! queue ! x264enc bitrate=${x264Bitrate} tune=zerolatency speed-preset=${x264Preset} byte-stream=true threads=0 key-int-max=60 ! queue ! mux.
-          demux. ! queue ! aacparse ! decodebin ! audioconvert ! volume name=vol volume=0 ! audioconvert ! voaacenc bitrate=96000 ! aacparse ! queue ! mux.
+          input-selector name=isel ! ${dropQueue} name=videoqueue ! x264enc bitrate=${x264Bitrate} tune=zerolatency speed-preset=${x264Preset} byte-stream=true threads=0 key-int-max=60 ! ${bufferQueue} name=videobufqueue ! mux.
+          demux. ! queue ! aacparse ! decodebin ! audioconvert ! volume name=vol volume=0 ! audioconvert ! ${dropQueue} name=audioqueue ! voaacenc bitrate=96000 ! aacparse ! ${bufferQueue} name=audiobufqueue ! mux.
           ${outStream}
         `)
 
@@ -218,7 +233,10 @@ const pipelineMachine = Machine(
           }
           debugInterval = setInterval(() => {
             printQueue('delayqueue')
-            printQueue('outqueue')
+            printQueue('videoqueue')
+            printQueue('audioqueue')
+            printQueue('videobufqueue')
+            printQueue('audiobufqueue')
             console.log('---')
           }, 1000)
         }
