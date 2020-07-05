@@ -9,6 +9,8 @@ const websocket = require('koa-easy-ws')
 const { Machine, interpret, assign, send } = require('xstate')
 const gstreamer = require('gstreamer-superficial')
 
+const SEC = 1e9
+
 function gstEscape(str) {
   // GStreamer interpets backslashes as escapes, so we need to escape them when passing them into pipeline syntax (such as for windows paths).
   return str.replace(/\\/g, '\\\\')
@@ -140,12 +142,12 @@ const pipelineMachine = Machine(
 
         const pixelizedWidth = Math.floor(width / pixelizeScale)
         const pixelizedHeight = Math.floor(height / pixelizeScale)
-        const delayNs = delaySeconds * 1e9
+        const delayNs = delaySeconds * SEC
 
         const delayQueue = `
           queue name=delayqueue
             min-threshold-time=${delayNs}
-            max-size-time=${delayNs + 5 * 1e9}
+            max-size-time=${delayNs + 5 * SEC}
             max-size-buffers=0
             max-size-bytes=0
         `
