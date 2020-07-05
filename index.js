@@ -147,7 +147,7 @@ const pipelineMachine = Machine(
         const delayQueue = `
           queue name=delayqueue
             min-threshold-time=${delayNs}
-            max-size-time=${delayNs + 5 * SEC}
+            max-size-time=${delayNs + 0.5 * SEC}
             max-size-buffers=0
             max-size-bytes=0
         `
