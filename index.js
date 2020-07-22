@@ -135,6 +135,8 @@ const pipelineMachine = Machine(
           delaySeconds,
           x264Bitrate,
           x264Preset,
+          x264PsyTune,
+          x264Threads,
           pixelizeScale,
           overlayImg,
           debug,
@@ -187,7 +189,7 @@ const pipelineMachine = Machine(
             ! gdkpixbufoverlay location=${gstEscape(overlayImg)}
             ! queue
             ! isel.
-          input-selector name=isel ! ${dropQueue} name=videoqueue ! x264enc bitrate=${x264Bitrate} tune=zerolatency speed-preset=${x264Preset} byte-stream=true threads=0 key-int-max=60 ! ${bufferQueue} name=videobufqueue ! mux.
+          input-selector name=isel ! ${dropQueue} name=videoqueue ! x264enc bitrate=${x264Bitrate} tune=zerolatency speed-preset=${x264Preset} byte-stream=true threads=${x264Threads} psy-tune=${x264PsyTune} key-int-max=60 ! ${bufferQueue} name=videobufqueue ! mux.
           demux. ! queue ! aacparse ! decodebin ! audioconvert ! volume name=vol volume=0 ! audioconvert ! ${dropQueue} name=audioqueue ! voaacenc bitrate=96000 ! aacparse ! ${bufferQueue} name=audiobufqueue ! mux.
           ${outStream}
         `)
@@ -300,6 +302,14 @@ function parseArgs() {
     .option('x264-preset', {
       describe: 'Speed preset of x264 encoder',
       default: 'slow',
+    })
+    .option('x264-psy-tune', {
+      describe: 'Psychovisual tuning setting of x264 encoder',
+      default: 'none',
+    })
+    .option('x264-threads', {
+      describe: 'Number of threads for x264 encoder',
+      default: 0,
     })
     .option('pixelize-scale', {
       describe: 'Scale factor of pixelization (higher -> larger pixels)',
