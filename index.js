@@ -133,10 +133,12 @@ const pipelineMachine = Machine(
           srtInUri,
           outUri,
           delaySeconds,
-          x264Bitrate,
+          bitrate,
+          encoder,
           x264Preset,
           x264PsyTune,
           x264Threads,
+          nvencPreset,
           pixelizeScale,
           overlayImg,
           debug,
@@ -178,6 +180,15 @@ const pipelineMachine = Machine(
           throw new Error(`Unexpected output stream protocol: ${outUri}`)
         }
 
+        let encoderPlugin
+        if (encoder === 'x264') {
+          encoderPlugin = `x264enc bitrate=${bitrate} tune=zerolatency speed-preset=${x264Preset} byte-stream=true threads=${x264Threads} psy-tune=${x264PsyTune} key-int-max=60`
+        } else if (encoder === 'nvenc') {
+          encoderPlugin = `nvh264enc bitrate=${bitrate} preset=${nvencPreset} rc-mode=cbr gop-size=60 ! queue ! h264parse config-interval=2`
+        } else {
+          throw new Error(`Unexpected encoder: ${encoder}`)
+        }
+
         const pipeline = new gstreamer.Pipeline(`
           srtsrc name=src uri=${srtInUri} ! tsparse set-timestamps=true ! ${delayQueue} ! tsdemux name=demux
           demux. ! queue ! video/x-h264 ! h264parse ! video/x-h264 ! avdec_h264 ! output-selector name=osel
@@ -189,7 +200,7 @@ const pipelineMachine = Machine(
             ! gdkpixbufoverlay location=${gstEscape(overlayImg)}
             ! queue
             ! isel.
-          input-selector name=isel ! ${dropQueue} name=videoqueue ! x264enc bitrate=${x264Bitrate} tune=zerolatency speed-preset=${x264Preset} byte-stream=true threads=${x264Threads} psy-tune=${x264PsyTune} key-int-max=60 ! ${bufferQueue} name=videobufqueue ! mux.
+          input-selector name=isel ! ${dropQueue} name=videoqueue ! ${encoderPlugin} ! ${bufferQueue} name=videobufqueue ! mux.
           demux. ! queue ! aacparse ! decodebin ! audioconvert ! volume name=vol volume=0 ! audioconvert ! ${dropQueue} name=audioqueue ! voaacenc bitrate=96000 ! aacparse ! ${bufferQueue} name=audiobufqueue ! mux.
           ${outStream}
         `)
@@ -295,9 +306,14 @@ function parseArgs() {
       describe: 'Height of stream',
       default: 1080,
     })
-    .option('x264-bitrate', {
+    .option('bitrate', {
       describe: 'Bitrate of stream',
       default: 4500,
+    })
+    .option('encoder', {
+      describe: 'Encoder to use for h264',
+      default: 'x264',
+      choices: ['x264', 'nvenc'],
     })
     .option('x264-preset', {
       describe: 'Speed preset of x264 encoder',
@@ -310,6 +326,10 @@ function parseArgs() {
     .option('x264-threads', {
       describe: 'Number of threads for x264 encoder',
       default: 0,
+    })
+    .option('nvenc-preset', {
+      describe: 'Preset of nvenc encoder',
+      default: 'low-latency-hq',
     })
     .option('pixelize-scale', {
       describe: 'Scale factor of pixelization (higher -> larger pixels)',
