@@ -99,7 +99,6 @@ const pipelineMachine = Machine(
               },
             },
           },
-          finished: {},
           error: {
             entry: 'logError',
           },
