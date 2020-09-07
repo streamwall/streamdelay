@@ -56,6 +56,8 @@ const pipelineMachine = Machine(
               settings: (context, event) => event.settings,
             }),
           },
+          RESUME: '.running',
+          STOP: '.stopped',
           FINISHED: '.restarting',
         },
         states: {
@@ -71,7 +73,7 @@ const pipelineMachine = Machine(
               id: 'Pipeline',
               src: 'runPipeline',
             },
-            on: { STARTED: '.started' },
+            on: { STARTED: '.started', RESUME: {} },
             states: {
               waiting: {},
               started: {
@@ -99,6 +101,7 @@ const pipelineMachine = Machine(
               },
             },
           },
+          stopped: {},
           error: {
             entry: 'logError',
           },
@@ -371,6 +374,7 @@ function initAPIServer(argv, pipelineService) {
       delaySeconds: argv.delaySeconds,
       restartSeconds: argv.restartSeconds,
       isCensored: state.matches('censorship.censored'),
+      isStreamRunning: state.matches('stream.running'),
       state: state.value,
     }
   }
@@ -378,6 +382,9 @@ function initAPIServer(argv, pipelineService) {
   function handlePatchState(patchState) {
     if (patchState.isCensored !== undefined) {
       pipelineService.send(patchState.isCensored ? 'CENSOR' : 'UNCENSOR')
+    }
+    if (patchState.isStreamRunning !== undefined) {
+      pipelineService.send(patchState.isStreamRunning ? 'RESUME' : 'STOP')
     }
   }
 

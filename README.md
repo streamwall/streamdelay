@@ -70,6 +70,18 @@ State.from(state).matches('stream.running.started')
 State.from(state).matches('censorship.censored.deactivating')
 ```
 
+### Start/stop the stream
+
+Start / stop the streaming pipeline. When stopped, streamdelay disconnects from its input and output endpoints.
+
+```
+PATCH /status
+Content-Type: application/json
+{isStreamRunning: false} or {isStreamRunning: true}
+```
+
+returns: same as `/status`
+
 ### Set status
 
 Set the stream status to censored (redacted) or not. When transitioning from censored to uncensored status, Streamdelay will wait the configured `delaySeconds` before turning off the censored status. This helps prevent early release of the censored mode before the delayed content has been broadcast.
