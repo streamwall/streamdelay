@@ -10,5 +10,5 @@
   "x264Bitrate": 4500,
   "x264Preset": "slow",
   "pixelizeScale": 20,
-  "overlayImg": "change-me.png"
+  "overlayImg": "example.overlay.png"
 }
