@@ -6,7 +6,7 @@ const Koa = require('koa')
 const bodyParser = require('koa-bodyparser')
 const route = require('koa-route')
 const websocket = require('koa-easy-ws')
-const { Machine, interpret, assign, send } = require('xstate')
+const { Machine, interpret, send } = require('xstate')
 const gstreamer = require('gstreamer-superficial')
 
 const SEC = 1e9
@@ -48,20 +48,14 @@ const pipelineMachine = Machine(
         },
       },
       stream: {
-        initial: 'init',
+        initial: 'stopped',
         on: {
-          START: {
-            target: '.running',
-            actions: assign({
-              settings: (context, event) => event.settings,
-            }),
-          },
-          RESUME: '.running',
+          START: '.running',
           STOP: '.stopped',
           FINISHED: '.restarting',
         },
         states: {
-          init: {},
+          stopped: {},
           restarting: {
             after: {
               RESTART_DELAY: 'running',
@@ -73,7 +67,7 @@ const pipelineMachine = Machine(
               id: 'Pipeline',
               src: 'runPipeline',
             },
-            on: { STARTED: '.started', RESUME: {} },
+            on: { STARTED: '.started', START: {} },
             states: {
               waiting: {},
               started: {
@@ -101,7 +95,6 @@ const pipelineMachine = Machine(
               },
             },
           },
-          stopped: {},
           error: {
             entry: 'logError',
           },
@@ -340,6 +333,11 @@ function parseArgs() {
       normalize: true,
       required: true,
     })
+    .option('start', {
+      describe: 'Start stream on initial run',
+      boolean: true,
+      default: true,
+    })
     .option('debug', {
       describe: 'Print GStreamer debugging status information',
       boolean: true,
@@ -348,7 +346,12 @@ function parseArgs() {
 }
 
 function initPipeline(argv) {
-  const pipelineService = interpret(pipelineMachine)
+  const machine = pipelineMachine.withContext({
+    ...pipelineMachine.context,
+    settings: argv,
+  })
+
+  const pipelineService = interpret(machine)
 
   pipelineService.onTransition((state) => {
     console.log('state:', state.value)
@@ -384,7 +387,7 @@ function initAPIServer(argv, pipelineService) {
       pipelineService.send(patchState.isCensored ? 'CENSOR' : 'UNCENSOR')
     }
     if (patchState.isStreamRunning !== undefined) {
-      pipelineService.send(patchState.isStreamRunning ? 'RESUME' : 'STOP')
+      pipelineService.send(patchState.isStreamRunning ? 'START' : 'STOP')
     }
   }
 
@@ -490,7 +493,9 @@ function initAPIServer(argv, pipelineService) {
 function main() {
   const argv = parseArgs()
   const pipelineService = initPipeline(argv)
-  pipelineService.send({ type: 'START', settings: argv })
+  if (argv.start) {
+    pipelineService.send({ type: 'START' })
+  }
   initAPIServer(argv, pipelineService)
 }
 
