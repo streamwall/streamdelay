@@ -10,5 +10,6 @@
   "x264Bitrate": 4500,
   "x264Preset": "slow",
   "pixelizeScale": 20,
-  "overlayImg": "example.overlay.png"
+  "overlayImg": "example.overlay.png",
+  "start": true
 }
