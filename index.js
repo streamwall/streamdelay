@@ -291,7 +291,6 @@ function parseArgs() {
     })
     .option('out-uri', {
       describe: 'URI of output SRT stream (srt:// or rtmp://)',
-      required: true,
       conflicts: ['out-pipeline'],
     })
     .option('out-pipeline', {
