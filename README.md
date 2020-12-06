@@ -24,9 +24,9 @@ Binaries may be available via the [releases page](https://github.com/chromakode/
 
 ### Starting Streamdelay
 
-1. Copy `example.config.json` to `config.json` and customize to suit your needs.
+1. Copy `example.config.toml` to `config.toml` and customize to suit your needs.
 1. Configure your streaming software to output to the SRT endpoint specified in `"srtInUri"`.
-1. Run (binary) `streamdelay --config=config.json` or (development) `npm start -- --config=config.json`.
+1. Run (binary) `streamdelay --config=config.toml` or (development) `npm start -- --config=config.toml`.
 1. Start streaming.
 
 ## HTTP API

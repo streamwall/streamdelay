@@ -2,6 +2,7 @@ const { timingSafeEqual } = require('crypto')
 const fs = require('fs')
 const http = require('http')
 const yargs = require('yargs')
+const TOML = require('@iarna/toml')
 const Koa = require('koa')
 const bodyParser = require('koa-bodyparser')
 const route = require('koa-route')
@@ -259,7 +260,12 @@ const pipelineMachine = Machine(
 function parseArgs() {
   const parser = yargs
     .config('config', (configPath) => {
-      return JSON.parse(fs.readFileSync(configPath, 'utf-8'))
+      const content = fs.readFileSync(configPath, 'utf-8')
+      if (configPath.endsWith('.toml')) {
+        return TOML.parse(content)
+      } else {
+        return JSON.parse(content)
+      }
     })
     .option('api-hostname', {
       describe: 'Override hostname the API server listens on',
