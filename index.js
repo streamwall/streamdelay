@@ -126,6 +126,7 @@ const pipelineMachine = Machine(
           height,
           srtInUri,
           outUri,
+          outPipeline,
           delaySeconds,
           bitrate,
           encoder,
@@ -166,7 +167,9 @@ const pipelineMachine = Machine(
         `
 
         let outStream
-        if (outUri.startsWith('rtmp://')) {
+        if (outPipeline) {
+          outStream = outPipeline
+        } else if (outUri.startsWith('rtmp://')) {
           outStream = `flvmux name=mux streamable=true ! queue ! rtmpsink name=sink enable-last-sample=false location="${outUri} live=1"`
         } else if (outUri.startsWith('srt://')) {
           outStream = `mpegtsmux name=mux ! queue ! srtsink name=sink uri=${outUri}`
@@ -179,6 +182,8 @@ const pipelineMachine = Machine(
           encoderPlugin = `x264enc bitrate=${bitrate} tune=zerolatency speed-preset=${x264Preset} byte-stream=true threads=${x264Threads} psy-tune=${x264PsyTune} key-int-max=60`
         } else if (encoder === 'nvenc') {
           encoderPlugin = `nvh264enc bitrate=${bitrate} preset=${nvencPreset} rc-mode=cbr gop-size=60 ! queue ! h264parse config-interval=2`
+        } else if (encode === 'none') {
+          encoderPlugin = 'identity'
         } else {
           throw new Error(`Unexpected encoder: ${encoder}`)
         }
@@ -287,6 +292,11 @@ function parseArgs() {
     .option('out-uri', {
       describe: 'URI of output SRT stream (srt:// or rtmp://)',
       required: true,
+      conflicts: ['out-pipeline'],
+    })
+    .option('out-pipeline', {
+      describe: 'Custom GStreamer pipeline for output',
+      conflicts: ['out-uri'],
     })
     .option('delay-seconds', {
       describe: 'Number of seconds to delay stream',
@@ -312,7 +322,7 @@ function parseArgs() {
     .option('encoder', {
       describe: 'Encoder to use for h264',
       default: 'x264',
-      choices: ['x264', 'nvenc'],
+      choices: ['x264', 'nvenc', 'none'],
     })
     .option('x264-preset', {
       describe: 'Speed preset of x264 encoder',
