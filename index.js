@@ -238,6 +238,9 @@ const pipelineMachine = Machine(
         if (debug) {
           function printQueue(name) {
             const q = pipeline.findChild(name)
+            if (!q) {
+              return
+            }
             console.log(
               name,
               `time: ${q['current-level-time']} | bytes: ${q['current-level-bytes']} | max-time: ${q['max-size-time']}`,
