@@ -221,6 +221,10 @@ const pipelineMachine = Machine(
           ${outPipeline}
         `
 
+        if (debug) {
+          console.log('pipeline:', pipelineSource)
+        }
+
         const pipeline = new gstreamer.Pipeline(pipelineSource)
 
         pipeline.pollBus((msg) => {
