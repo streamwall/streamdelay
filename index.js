@@ -125,6 +125,7 @@ const pipelineMachine = Machine(
           width,
           height,
           srtInUri,
+          inPipeline,
           outUri,
           outPipeline,
           delaySeconds,
@@ -166,31 +167,45 @@ const pipelineMachine = Machine(
             max-size-bytes=0
         `
 
-        let outStream
-        if (outPipeline) {
-          outStream = outPipeline
-        } else if (outUri.startsWith('rtmp://')) {
-          outStream = `flvmux name=mux streamable=true ! queue ! rtmpsink name=sink enable-last-sample=false location="${outUri} live=1"`
-        } else if (outUri.startsWith('srt://')) {
-          outStream = `mpegtsmux name=mux ! queue ! srtsink name=sink uri=${outUri}`
-        } else {
-          throw new Error(`Unexpected output stream protocol: ${outUri}`)
+        if (!inPipeline) {
+          inPipeline = `
+            srtsrc name=src uri=${srtInUri} do-timestamp=true ! tsparse set-timestamps=true smoothing-latency=1000 ! ${delayQueue} ! tsdemux name=demux
+            demux.video ! queue ! video/x-h264 ! h264parse ! video/x-h264 ! avdec_h264 ! identity name="videoinput"
+            demux.audio ! parsebin ! decodebin ! identity name="audioinput"
+					`
         }
 
-        let encoderPlugin
-        if (encoder === 'x264') {
-          encoderPlugin = `x264enc bitrate=${bitrate} tune=zerolatency speed-preset=${x264Preset} byte-stream=true threads=${x264Threads} psy-tune=${x264PsyTune} key-int-max=60`
-        } else if (encoder === 'nvenc') {
-          encoderPlugin = `nvh264enc bitrate=${bitrate} preset=${nvencPreset} rc-mode=cbr gop-size=60 ! queue ! h264parse config-interval=2`
-        } else if (encoder === 'none') {
-          encoderPlugin = 'identity'
-        } else {
-          throw new Error(`Unexpected encoder: ${encoder}`)
+        if (!outPipeline) {
+          if (outUri.startsWith('rtmp://')) {
+            outPipeline = `flvmux name=mux streamable=true ! queue ! rtmpsink name=sink enable-last-sample=false location="${outUri} live=1"`
+          } else if (outUri.startsWith('srt://')) {
+            outPipeline = `mpegtsmux name=mux ! queue ! srtsink name=sink uri=${outUri}`
+          } else {
+            throw new Error(`Unexpected output stream protocol: ${outUri}`)
+          }
         }
 
-        const pipeline = new gstreamer.Pipeline(`
-          srtsrc name=src uri=${srtInUri} ! tsparse set-timestamps=true ! ${delayQueue} ! tsdemux name=demux
-          demux. ! queue ! video/x-h264 ! h264parse ! video/x-h264 ! avdec_h264 ! output-selector name=osel
+        let audioEncodePipeline
+        let videoEncodePipeline
+        if (encoder === 'none') {
+          audioEncodePipeline = ''
+          videoEncodePipeline = ''
+        } else {
+          let encoderPlugin
+          if (encoder === 'x264') {
+            encoderPlugin = `x264enc bitrate=${bitrate} tune=zerolatency speed-preset=${x264Preset} byte-stream=true threads=${x264Threads} psy-tune=${x264PsyTune} key-int-max=60`
+          } else if (encoder === 'nvenc') {
+            encoderPlugin = `nvh264enc bitrate=${bitrate} preset=${nvencPreset} rc-mode=cbr gop-size=60 ! queue ! h264parse config-interval=2`
+          } else {
+            throw new Error(`Unexpected encoder: ${encoder}`)
+          }
+          audioEncodePipeline = `! voaacenc bitrate=96000 ! aacparse ! ${bufferQueue} name=audiobufqueue ! mux.`
+          videoEncodePipeline = `! ${encoderPlugin} ! ${bufferQueue} name=videobufqueue ! mux.`
+        }
+
+        const pipelineSource = `
+          ${inPipeline}
+          videoinput. ! output-selector name=osel
           osel. ! queue ! isel.
           osel. ! queue
             ! videoscale
@@ -199,10 +214,12 @@ const pipelineMachine = Machine(
             ! gdkpixbufoverlay location=${gstEscape(overlayImg)}
             ! queue
             ! isel.
-          input-selector name=isel ! ${dropQueue} name=videoqueue ! ${encoderPlugin} ! ${bufferQueue} name=videobufqueue ! mux.
-          demux. ! queue ! aacparse ! decodebin ! audioconvert ! volume name=vol volume=0 ! audioconvert ! ${dropQueue} name=audioqueue ! voaacenc bitrate=96000 ! aacparse ! ${bufferQueue} name=audiobufqueue ! mux.
-          ${outStream}
-        `)
+          input-selector name=isel ! ${dropQueue} name=videoqueue ${videoEncodePipeline}
+          audioinput. ! audioconvert ! volume name=vol volume=0 ! audioconvert ! ${dropQueue} name=audioqueue ${audioEncodePipeline}
+          ${outPipeline}
+        `
+
+        const pipeline = new gstreamer.Pipeline(pipelineSource)
 
         pipeline.pollBus((msg) => {
           if (msg.type === 'error') {
@@ -290,7 +307,10 @@ function parseArgs() {
     })
     .option('srt-in-uri', {
       describe: 'URI of input SRT stream',
-      required: true,
+    })
+    .option('in-pipeline', {
+      describe: 'Custom GStreamer pipeline for input',
+      conflicts: ['srt-in-uri'],
     })
     .option('out-uri', {
       describe: 'URI of output SRT stream (srt:// or rtmp://)',

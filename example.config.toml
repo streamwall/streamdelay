@@ -2,7 +2,15 @@ apiHostname = "localhost"
 apiPort = 8404
 apiKey = "change-me"
 srtInUri = "srt://:5000?mode=listener"
+# inPipeline = """
+#   audiotestsrc is-live=true name=audioinput
+#   videotestsrc is-live=true name=videoinput
+# """
 outUri = "srt://:5001?mode=listener"
+# outPipeline = """
+#   videoqueue. ! fakesink
+#   audioqueue. ! fakesink
+# """
 delaySeconds = 15
 width = 1920
 height = 1080
