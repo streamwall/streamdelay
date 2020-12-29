@@ -11,6 +11,7 @@ outUri = "srt://:5001?mode=listener"
 #   videoqueue. ! fakesink
 #   audioqueue. ! fakesink
 # """
+# outScript = "echo hello world"
 delaySeconds = 15
 width = 1920
 height = 1080

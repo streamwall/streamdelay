@@ -1,5 +1,6 @@
 const { timingSafeEqual } = require('crypto')
 const fs = require('fs')
+const { spawn } = require('child_process')
 const http = require('http')
 const yargs = require('yargs')
 const TOML = require('@iarna/toml')
@@ -128,6 +129,7 @@ const pipelineMachine = Machine(
           inPipeline,
           outUri,
           outPipeline,
+          outScript,
           delaySeconds,
           bitrate,
           encoder,
@@ -228,12 +230,24 @@ const pipelineMachine = Machine(
             console.log(msg)
           }
           if (msg.type === 'eos' || msg.type === 'error') {
-            pipeline.stop()
             callback('FINISHED')
           } else if (msg.type === 'stream-start') {
             callback('STARTED')
           }
         })
+
+        let scriptProcess
+        if (outScript) {
+          scriptProcess = spawn(outScript, [], {
+            shell: true,
+            stdio: ['ignore', 'inherit', 'inherit'],
+          })
+          scriptProcess.once('exit', (code) => {
+            if (code !== 0) {
+              callback('FINISHED')
+            }
+          })
+        }
 
         pipeline.play()
 
@@ -274,8 +288,11 @@ const pipelineMachine = Machine(
         }
 
         return () => {
-          pipeline.stop()
           clearInterval(debugInterval)
+          pipeline.stop()
+          if (scriptProcess) {
+            scriptProcess.kill()
+          }
         }
       },
     },
@@ -319,6 +336,9 @@ function parseArgs() {
     .option('out-pipeline', {
       describe: 'Custom GStreamer pipeline for output',
       conflicts: ['out-uri'],
+    })
+    .option('out-script', {
+      describe: 'Script to run when pipeline is running',
     })
     .option('delay-seconds', {
       describe: 'Number of seconds to delay stream',
