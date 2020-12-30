@@ -207,6 +207,7 @@ const pipelineMachine = Machine(
 
         const pipelineSource = `
           ${inPipeline}
+          # Video pipeline: dynamically switch between a passthrough (uncensored) and pixelized/overlay (censored)
           videoinput. ! output-selector name=osel
           osel. ! queue ! isel.
           osel. ! queue
@@ -217,6 +218,8 @@ const pipelineMachine = Machine(
             ! queue
             ! isel.
           input-selector name=isel ! ${dropQueue} name=videoqueue ${videoEncodePipeline}
+
+          # Audio pipeline: dynamically adjusted volume (to mute when censoring)
           audioinput. ! audioconvert ! volume name=vol volume=0 ! audioconvert ! ${dropQueue} name=audioqueue ${audioEncodePipeline}
           ${outPipeline}
         `
@@ -225,7 +228,13 @@ const pipelineMachine = Machine(
           console.log('pipeline:', pipelineSource)
         }
 
-        const pipeline = new gstreamer.Pipeline(pipelineSource)
+        // Remove comments
+        const pipelineString = pipelineSource
+          .split('\n')
+          .filter((line) => !line.startsWith('#'))
+          .join('\n')
+
+        const pipeline = new gstreamer.Pipeline(pipelineString)
 
         pipeline.pollBus((msg) => {
           if (msg.type === 'error') {
