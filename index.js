@@ -174,7 +174,7 @@ const pipelineMachine = Machine(
             srtsrc name=src uri=${srtInUri} do-timestamp=true ! tsparse set-timestamps=true smoothing-latency=1000 ! ${delayQueue} ! tsdemux name=demux
             demux.video ! queue ! video/x-h264 ! h264parse ! video/x-h264 ! avdec_h264 ! identity name="videoinput"
             demux.audio ! parsebin ! decodebin ! identity name="audioinput"
-					`
+          `
         }
 
         if (!outPipeline) {
