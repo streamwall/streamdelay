@@ -231,7 +231,7 @@ const pipelineMachine = Machine(
         // Remove comments
         const pipelineString = pipelineSource
           .split('\n')
-          .filter((line) => !line.startsWith('#'))
+          .filter((line) => !line.match(/^\s*#/))
           .join('\n')
 
         const pipeline = new gstreamer.Pipeline(pipelineString)
