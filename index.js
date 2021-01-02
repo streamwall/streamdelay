@@ -146,14 +146,6 @@ const pipelineMachine = Machine(
         const pixelizedHeight = Math.floor(height / pixelizeScale)
         const delayNs = delaySeconds * SEC
 
-        const delayQueue = `
-          queue name=delayqueue
-            min-threshold-time=${delayNs}
-            max-size-time=${delayNs + 0.5 * SEC}
-            max-size-buffers=0
-            max-size-bytes=0
-        `
-
         const bufferQueue = `
           queue
             max-size-time=${delayNs}
@@ -171,7 +163,7 @@ const pipelineMachine = Machine(
 
         if (!inPipeline) {
           inPipeline = `
-            srtsrc name=src uri=${srtInUri} do-timestamp=true ! tsparse set-timestamps=true smoothing-latency=1000 ! ${delayQueue} ! tsdemux name=demux
+            srtsrc name=src uri=${srtInUri} do-timestamp=true ! tsparse set-timestamps=true smoothing-latency=1000 ! maindelayqueue. maindelayqueue. ! tsdemux name=demux
             demux.video ! queue ! video/x-h264 ! h264parse ! video/x-h264 ! avdec_h264 ! identity name="videoinput"
             demux.audio ! parsebin ! decodebin ! identity name="audioinput"
           `
@@ -206,7 +198,22 @@ const pipelineMachine = Machine(
         }
 
         const pipelineSource = `
+          # Main delay queue (for delaying encoded input in default config, or video in a split scenario)
+          queue name=maindelayqueue
+            min-threshold-time=${delayNs}
+            max-size-time=${delayNs + 0.5 * SEC}
+            max-size-buffers=0
+            max-size-bytes=0
+
+          # Auxiliary delay queue (for delaying audio in a split scenario)
+          queue name=auxdelayqueue
+            min-threshold-time=${delayNs}
+            max-size-time=${delayNs + 0.5 * SEC}
+            max-size-buffers=0
+            max-size-bytes=0
+
           ${inPipeline}
+
           # Video pipeline: dynamically switch between a passthrough (uncensored) and pixelized/overlay (censored)
           videoinput. ! output-selector name=osel
           osel. ! queue ! isel.
