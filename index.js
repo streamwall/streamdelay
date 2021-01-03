@@ -298,7 +298,8 @@ const pipelineMachine = Machine(
             )
           }
           debugInterval = setInterval(() => {
-            printQueue('delayqueue')
+            printQueue('maindelayqueue')
+            printQueue('auxdelayqueue')
             printQueue('videoqueue')
             printQueue('audioqueue')
             printQueue('videobufqueue')
