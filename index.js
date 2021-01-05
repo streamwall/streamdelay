@@ -213,14 +213,14 @@ const pipelineMachine = Machine(
           ${inPipeline}
 
           # Video pipeline: dynamically switch between a passthrough (uncensored) and pixelized/overlay (censored)
-          videoinput. ! output-selector name=osel
-          osel. ! isel.
-          osel.
+          videoinput. ! output-selector name=vsel
+          vsel. ! vfun.
+          vsel.
             ! videoscale
             ! video/x-raw,width=${pixelizedWidth},height=${pixelizedHeight}
             ! videoscale method=nearest-neighbour ! video/x-raw,width=${width},height=${height}
-            ! isel.
-          input-selector name=isel ! ${dropQueue} name=videoqueue ${videoEncodePipeline}
+            ! vfun.
+          funnel name=vfun ! ${dropQueue} name=videoqueue ${videoEncodePipeline}
 
           # Audio pipeline: dynamically adjusted volume (to mute when censoring)
           audioinput. ! audioconvert ! volume name=vol volume=0 ! ${dropQueue} name=audioqueue ${audioEncodePipeline}
@@ -274,12 +274,10 @@ const pipelineMachine = Machine(
 
         onReceive((ev) => {
           if (ev.type === 'NORMAL') {
-            pipeline.setPad('osel', 'active-pad', 'src_0')
-            pipeline.setPad('isel', 'active-pad', 'sink_0')
+            pipeline.setPad('vsel', 'active-pad', 'src_0')
             pipeline.findChild('vol').volume = 1
           } else if (ev.type === 'CENSOR') {
-            pipeline.setPad('osel', 'active-pad', 'src_1')
-            pipeline.setPad('isel', 'active-pad', 'sink_1')
+            pipeline.setPad('vsel', 'active-pad', 'src_1')
             pipeline.findChild('vol').volume = 0
           } else {
             console.warn('unexpected event:', ev)
