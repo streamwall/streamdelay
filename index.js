@@ -223,7 +223,7 @@ const pipelineMachine = Machine(
           input-selector name=isel ! ${dropQueue} name=videoqueue ${videoEncodePipeline}
 
           # Audio pipeline: dynamically adjusted volume (to mute when censoring)
-          audioinput. ! audioconvert ! volume name=vol volume=0 ! audioconvert ! ${dropQueue} name=audioqueue ${audioEncodePipeline}
+          audioinput. ! audioconvert ! volume name=vol volume=0 ! ${dropQueue} name=audioqueue ${audioEncodePipeline}
           ${outPipeline}
         `
 
