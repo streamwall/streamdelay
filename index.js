@@ -251,6 +251,9 @@ const pipelineMachine = Machine(
             pipeline.findChild('maindelayqueue')['min-threshold-time'] = delayNs
             pipeline.findChild('auxdelayqueue')['min-threshold-time'] = delayNs
             callback('STARTED')
+            if (debug) {
+              console.log('latency:', pipeline.latency)
+            }
           }
         })
 
