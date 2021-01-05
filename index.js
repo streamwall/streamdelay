@@ -200,14 +200,12 @@ const pipelineMachine = Machine(
         const pipelineSource = `
           # Main delay queue (for delaying encoded input in default config, or video in a split scenario)
           queue name=maindelayqueue
-            min-threshold-time=${delayNs}
             max-size-time=${delayNs + 0.5 * SEC}
             max-size-buffers=0
             max-size-bytes=0
 
           # Auxiliary delay queue (for delaying audio in a split scenario)
           queue name=auxdelayqueue
-            min-threshold-time=${delayNs}
             max-size-time=${delayNs + 0.5 * SEC}
             max-size-buffers=0
             max-size-bytes=0
@@ -252,6 +250,8 @@ const pipelineMachine = Machine(
           if (msg.type === 'eos' || msg.type === 'error') {
             callback('FINISHED')
           } else if (msg.type === 'stream-start') {
+            pipeline.findChild('maindelayqueue')['min-threshold-time'] = delayNs
+            pipeline.findChild('auxdelayqueue')['min-threshold-time'] = delayNs
             callback('STARTED')
           }
         })
