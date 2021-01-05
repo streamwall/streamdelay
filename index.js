@@ -214,13 +214,11 @@ const pipelineMachine = Machine(
 
           # Video pipeline: dynamically switch between a passthrough (uncensored) and pixelized/overlay (censored)
           videoinput. ! output-selector name=osel
-          osel. ! queue ! isel.
-          osel. ! queue
+          osel. ! isel.
+          osel.
             ! videoscale
             ! video/x-raw,width=${pixelizedWidth},height=${pixelizedHeight}
             ! videoscale method=nearest-neighbour ! video/x-raw,width=${width},height=${height}
-            ! gdkpixbufoverlay location=${gstEscape(overlayImg)}
-            ! queue
             ! isel.
           input-selector name=isel ! ${dropQueue} name=videoqueue ${videoEncodePipeline}
 
