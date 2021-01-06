@@ -126,7 +126,6 @@ const pipelineMachine = Machine(
           width,
           height,
           srtInUri,
-          inPipeline,
           outUri,
           outPipeline,
           outScript,
@@ -141,6 +140,7 @@ const pipelineMachine = Machine(
           overlayImg,
           debug,
         } = context.settings
+        let { inPipeline } = context.settings
 
         const pixelizedWidth = Math.floor(width / pixelizeScale)
         const pixelizedHeight = Math.floor(height / pixelizeScale)
