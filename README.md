@@ -53,6 +53,8 @@ returns:
 ```
 {
   isCensored: bool,
+  isStreamRunning: bool,
+  startTime: number?,
   state: {... full state object ...}
 }
 ```

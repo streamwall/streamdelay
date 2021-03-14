@@ -8,7 +8,7 @@ const Koa = require('koa')
 const bodyParser = require('koa-bodyparser')
 const route = require('koa-route')
 const websocket = require('koa-easy-ws')
-const { Machine, interpret, send } = require('xstate')
+const { Machine, interpret, send, assign } = require('xstate')
 const gstreamer = require('gstreamer-superficial')
 
 const SEC = 1e9
@@ -24,6 +24,7 @@ const pipelineMachine = Machine(
     type: 'parallel',
     context: {
       censor: false,
+      startTime: null,
       settings: null,
     },
     states: {
@@ -74,6 +75,8 @@ const pipelineMachine = Machine(
               waiting: {},
               started: {
                 initial: 'normal',
+                entry: assign({ startTime: () => Date.now() }),
+                exit: assign({ startTime: null }),
                 states: {
                   normal: {
                     entry: send('NORMAL', { to: 'Pipeline' }),
@@ -456,6 +459,7 @@ function initAPIServer(argv, pipelineService) {
       restartSeconds: argv.restartSeconds,
       isCensored: state.matches('censorship.censored'),
       isStreamRunning: state.matches('stream.running'),
+      startTime: state.context.startTime,
       state: state.value,
     }
   }
