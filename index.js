@@ -219,6 +219,7 @@ const pipelineMachine = Machine(
             ! videoscale
             ! video/x-raw,width=${pixelizedWidth},height=${pixelizedHeight}
             ! videoscale method=nearest-neighbour ! video/x-raw,width=${width},height=${height}
+            ! gdkpixbufoverlay location=${gstEscape(overlayImg)}
             ! vfun.
           funnel name=vfun ! ${dropQueue} name=videoqueue ${videoEncodePipeline}
 
