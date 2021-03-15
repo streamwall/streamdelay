@@ -245,7 +245,11 @@ const pipelineMachine = Machine(
         pipeline.pollBus((msg) => {
           if (msg.type === 'error') {
             console.error(msg)
-          } else if (debug) {
+          } else if (
+            debug &&
+            msg.type !== 'state-changed' &&
+            msg.name !== 'GstMessageStreamStatus'
+          ) {
             console.log(msg)
           }
           if (msg.type === 'eos' || msg.type === 'error') {
