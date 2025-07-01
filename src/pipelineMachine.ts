@@ -129,9 +129,9 @@ const pipelineMachine = setup({
         } else {
           let encoderPlugin: string
           if (encoder === 'x264') {
-            encoderPlugin = `x264enc bitrate=${bitrate} tune=zerolatency speed-preset=${x264Preset} byte-stream=true threads=${x264Threads} psy-tune=${x264PsyTune} key-int-max=60`
+            encoderPlugin = `x264enc bitrate=${bitrate} tune=zerolatency speed-preset=${x264Preset} byte-stream=true threads=${x264Threads} psy-tune=${x264PsyTune} key-int-max=120`
           } else if (encoder === 'nvenc') {
-            encoderPlugin = `nvh264enc bitrate=${bitrate} preset=${nvencPreset} rc-mode=cbr gop-size=60 ! queue ! h264parse config-interval=2`
+            encoderPlugin = `nvh264enc bitrate=${bitrate} preset=${nvencPreset} rc-mode=cbr gop-size=120 ! queue ! h264parse config-interval=2`
           } else {
             throw new Error(`Unexpected encoder: ${encoder}`)
           }
