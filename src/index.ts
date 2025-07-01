@@ -14,6 +14,7 @@ type Arguments = AppSettings & {
 
 function parseArgs() {
   return yargs()
+    .env('STREAMDELAY')
     .config('config', (configPath: string) => {
       const content = fs.readFileSync(configPath, 'utf-8')
       if (configPath.endsWith('.toml')) {
