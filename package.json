@@ -1,24 +1,33 @@
 {
   "name": "streamdelay",
-  "version": "0.0.10",
+  "version": "1.0.0",
   "description": "A delay + dump button for live streams, allowing screening and redaction of explicit content.",
-  "main": "index.js",
+  "main": "src/index.ts",
+  "type": "module",
   "dependencies": {
+    "@fastify/websocket": "^10.0.0",
     "@iarna/toml": "^2.2.5",
-    "gstreamer-superficial": "github:chromakode/node-gstreamer-superficial#windows-include-path-env",
-    "koa": "^2.13.0",
-    "koa-bodyparser": "^4.3.0",
-    "koa-easy-ws": "^1.1.3",
-    "koa-route": "^3.2.0",
-    "xstate": "^4.10.0",
-    "yargs": "^15.3.1"
+    "@sinclair/typebox": "^0.32.0",
+    "fastify": "^4.0.0",
+    "gst-kit": "github:chromakode/gst-kit#build-ts-on-install-bigint",
+    "prettier-plugin-organize-imports": "^4.1.0",
+    "ws": "^8.0.0",
+    "xstate": "^5.20.0",
+    "yargs": "^18.0.0"
   },
   "devDependencies": {
-    "pkg": "^4.4.8"
+    "@tsconfig/node-ts": "^23.6.1",
+    "@tsconfig/node22": "^22.0.2",
+    "@tsconfig/recommended": "^1.0.10",
+    "@types/node": "^22.0.0",
+    "@types/ws": "^8.0.0",
+    "@types/yargs": "^17.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
   },
   "scripts": {
-    "start": "node index.js",
-    "build": "pkg index.js -o build/streamdelay"
+    "start": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit"
   },
   "repository": {
     "type": "git",
